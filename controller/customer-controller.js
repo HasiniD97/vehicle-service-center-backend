@@ -1,20 +1,5 @@
-const mysql = require('mysql2')
-
-// DB connection
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '1234',
-  database: 'vehicle_service'
-})
-
-connection.connect((err) => {
-  if (err) {
-    console.error('Database connection failed:', err)
-    return
-  }
-  console.log('MySQL connected')
-})
+const dbConnection = require('../db-connection');
+const connection = dbConnection;
 
 /**
  * Save new customer
@@ -30,7 +15,7 @@ const saveCustomer = (req, res) => {
   const sql =
     'INSERT INTO customer (nic, customerName, phone) VALUES (?, ?, ?)'
 
-  connection.query(sql, [nic, customerName, phone], (err, result) => {
+    connection.query(sql, [nic, customerName, phone], (err, result) => {
     if (err) {
       console.error(err)
       return res.status(500).json({ message: 'Failed to save customer' })
@@ -54,7 +39,7 @@ const updateCustomer = (req, res) => {
   const sql =
     'UPDATE customer SET nic = ?, customerName = ?, phone = ? WHERE nic = ?'
 
-  connection.query(sql, [nic,customerName, phone, paramnic], (err, result) => {
+    connection.query(sql, [nic,customerName, phone, paramnic], (err, result) => {
     if (err) {
       console.error(err)
       return res.status(500).json({ message: 'Failed to update customer' })

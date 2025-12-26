@@ -1,20 +1,5 @@
-const mysql = require('mysql2')
-
-// DB connection
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '1234',
-  database: 'vehicle_service'
-})
-
-connection.connect((err) => {
-  if (err) {
-    console.error('Database connection failed:', err)
-    return
-  }
-  console.log('MySQL connected (vehicle)')
-})
+const dbConnection = require('../db-connection');
+const connection = dbConnection;
 
 /**
  * Save new vehicle
