@@ -3,6 +3,9 @@ const cors = require("cors");
 const app = express()
 const port = 3000
 
+//  Enable CORS
+app.use(cors());
+
 const customerRoute = require ('./routes/customer-route')
 const vehicleRoute = require ('./routes/vehicle-route')
 const serviceRoute = require ('./routes/service-route')
@@ -17,13 +20,13 @@ app.use(express.urlencoded())
 // parse application/json
 app.use(express.json())
 
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-  })
-);
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173",
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//     credentials: true
+//   })
+// );
 
 
 app.use('/api/v1/customer', customerRoute)
