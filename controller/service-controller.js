@@ -8,6 +8,7 @@ const saveService = async (req, res) => {
   const { serviceDate, fk_vehicleNo, fk_statusId } = req.body;
 
   if (!serviceDate || !fk_vehicleNo || !fk_statusId) {
+    
     return res.status(400).json({ message: 'All fields are required' });
   }
 
