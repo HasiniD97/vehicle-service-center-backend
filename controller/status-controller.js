@@ -1,19 +1,21 @@
-const dbConnection = require('../db-connection');
-const connection = dbConnection;
+const db = require('../db-connection');
 
-const getAllStatus = (req, res) => {
-    const sql = 'SELECT * FROM status'
+/**
+ * Get all status
+ * GET /
+ */
+const getAllStatus = async (req, res) => {
+  try {
+    const sql = 'SELECT * FROM status';
+    const [rows] = await db.query(sql);
 
-    connection.query(sql, (err, results) => {
-        if (err) {
-            console.error(err)
-            return res.status(500).json({ message: 'Failed to fetch status' })
-        }
-        res.json(results)
-    })
-}
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching status:', err);
+    res.status(500).json({ message: 'Failed to fetch status' });
+  }
+};
 
 module.exports = {
   getAllStatus
-  }
-  
+};

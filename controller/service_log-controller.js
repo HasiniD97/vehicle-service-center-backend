@@ -1,85 +1,74 @@
-const dbConnection = require('../db-connection');
-const connection = dbConnection;
+const db = require('../db-connection');
 
 /**
  * Save new service log
  * POST /
  * Returns all logs for the given serviceId
  */
-const saveServiceLog = (req, res) => {
-  const { description, fk_serviceId } = req.body
+const saveServiceLog = async (req, res) => {
+  const { description, fk_serviceId } = req.body;
 
   if (!description || !fk_serviceId) {
-    return res.status(400).json({ message: 'All fields are required' })
+    return res.status(400).json({ message: 'All fields are required' });
   }
 
-  const insertSql = `
-    INSERT INTO service_log
-    (description, fk_serviceId)
-    VALUES (?, ?)
-  `
+  try {
+    // Insert service log
+    const insertSql = `
+      INSERT INTO service_log (description, fk_serviceId)
+      VALUES (?, ?)
+    `;
 
-  connection.query(
-    insertSql,
-    [description, fk_serviceId],
-    (err) => {
-      if (err) {
-        console.error(err)
-        return res.status(500).json({ message: 'Failed to save service log' })
-      }
+    await db.query(insertSql, [description, fk_serviceId]);
 
-      // After insert, return all logs for this serviceId
-      const selectSql = `
-        SELECT
-          serviceLogId,
-          description,
-          fk_serviceId
-        FROM service_log
-        WHERE fk_serviceId = ?
-        ORDER BY serviceLogId ASC
-      `
+    // Fetch all logs for the service
+    const selectSql = `
+      SELECT
+        serviceLogId,
+        description,
+        fk_serviceId
+      FROM service_log
+      WHERE fk_serviceId = ?
+      ORDER BY serviceLogId ASC
+    `;
 
-      connection.query(selectSql, [fk_serviceId], (err, results) => {
-        if (err) {
-          console.error(err)
-          return res.status(500).json({ message: 'Failed to fetch service logs' })
-        }
+    const [results] = await db.query(selectSql, [fk_serviceId]);
 
-        res.status(201).json(results)
-      })
-    }
-  )
-}
+    res.status(201).json(results);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to save service log' });
+  }
+};
 
 /**
  * Get service logs by serviceId
  * GET /get_by_service_id/:sid
- * Returns array of logs
  */
-const getServiceLogByServiceID = (req, res) => {
-  const serviceId = req.params.sid
+const getServiceLogByServiceID = async (req, res) => {
+  const serviceId = req.params.sid;
 
-  const sql = `
-    SELECT
-      serviceLogId,
-      description,
-      fk_serviceId
-    FROM service_log
-    WHERE fk_serviceId = ?
-    ORDER BY serviceLogId ASC
-  `
+  try {
+    const sql = `
+      SELECT
+        serviceLogId,
+        description,
+        fk_serviceId
+      FROM service_log
+      WHERE fk_serviceId = ?
+      ORDER BY serviceLogId ASC
+    `;
 
-  connection.query(sql, [serviceId], (err, results) => {
-    if (err) {
-      console.error(err)
-      return res.status(500).json({ message: 'Failed to fetch service logs' })
-    }
+    const [results] = await db.query(sql, [serviceId]);
 
-    res.json(results) // always array
-  })
-}
+    res.json(results); // always array
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch service logs' });
+  }
+};
 
 module.exports = {
   saveServiceLog,
   getServiceLogByServiceID
-}
+};

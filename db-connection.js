@@ -1,36 +1,19 @@
-let mysql = require('mysql2')
+const mysql = require('mysql2/promise');
 
-let db;
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
 
-function getConnection() {
+  dateStrings: true,
+  timezone: '+05:30',
 
-    if (!db) {
+  waitForConnections: true,
+  connectionLimit: 10,   // adjust based on traffic
+  queueLimit: 0
+});
 
-        db = mysql.createConnection({
-
-            host: 'localhost',
-            user: 'root',
-            password: '1234',
-            database: 'vehicle_service'
-
-        });
-
-    }
-
-
-    // db.connect((err) => {
-    //     if (err) {
-    //       console.error('Database connection failed:', err)
-    //       return
-    //     }
-    //     console.log('MySQL connected')
-    //   })
-      
-
-
-    return db;
-
-}
-
-module.exports = getConnection();
+module.exports = pool;
 

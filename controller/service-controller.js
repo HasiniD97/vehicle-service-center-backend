@@ -1,167 +1,164 @@
-const dbConnection = require('../db-connection');
-const connection = dbConnection;
+const db = require('../db-connection');
 
 /**
  * Save new service
  * POST /
  */
-const saveService = (req, res) => {
-    const { serviceDate, fk_vehicleNo, fk_statusId } = req.body
-  
-    if (!serviceDate || !fk_vehicleNo || !fk_statusId) {
-      return res.status(400).json({ message: 'All fields are required' })
-    }
-  
+const saveService = async (req, res) => {
+  const { serviceDate, fk_vehicleNo, fk_statusId } = req.body;
+
+  if (!serviceDate || !fk_vehicleNo || !fk_statusId) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
     const sql = `
       INSERT INTO service
       (serviceDate, fk_vehicleNo, fk_statusId)
       VALUES (?, ?, ?)
-    `
-  
-    connection.query(
-      sql,
-      [serviceDate, fk_vehicleNo, fk_statusId],
-      (err, result) => {
-        if (err) {
-          console.error(err)
-          return res.status(500).json({ message: err.sqlMessage})
-        }
-  
-        res.status(201).json({
-          message: 'Service saved successfully',
-          serviceId: result.insertId   
-        })
-      }
-    )
+    `;
+
+    const [result] = await db.query(sql, [
+      serviceDate,
+      fk_vehicleNo,
+      fk_statusId
+    ]);
+
+    res.status(201).json({
+      message: 'Service saved successfully',
+      serviceId: result.insertId
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.sqlMessage || 'Failed to save service' });
   }
-  
+};
 
 /**
  * Update service by serviceId
  * PUT /:sid
  */
-// PUT /:sid
-const updateService = (req, res) => {
-    const serviceId = req.params.sid
-    const { serviceDate, fk_vehicleNo, fk_statusId } = req.body
-  
-    if (!serviceDate || !fk_vehicleNo || !fk_statusId) {
-      return res.status(400).json({ message: 'All fields are required' })
-    }
-  
+const updateService = async (req, res) => {
+  const serviceId = req.params.sid;
+  const { serviceDate, fk_vehicleNo, fk_statusId } = req.body;
+
+  if (!serviceDate || !fk_vehicleNo || !fk_statusId) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
     const sql = `
       UPDATE service
       SET serviceDate = ?, fk_vehicleNo = ?, fk_statusId = ?
       WHERE serviceId = ?
-    `
-  
-    connection.query(
-      sql,
-      [serviceDate, fk_vehicleNo, fk_statusId, serviceId],
-      (err, result) => {
-        if (err) {
-          console.error(err)
-          return res.status(500).json({ message: 'Failed to update service' })
-        }
-  
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ message: 'Service not found' })
-        }
-  
-        res.json({ message: 'Service updated successfully' })
-      }
-    )
+    `;
+
+    const [result] = await db.query(sql, [
+      serviceDate,
+      fk_vehicleNo,
+      fk_statusId,
+      serviceId
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+
+    res.json({ message: 'Service updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update service' });
   }
-  
+};
 
 /**
  * Get all services
  * GET /
  * Includes vehicle & status details
  */
-const getAllServices = (req, res) => {
-  const sql = `
-    SELECT
-      s.serviceId,
-      s.serviceDate,
-      s.fk_vehicleNo,
-      s.fk_statusId,
-      st.statusName
-    FROM service s
-    JOIN status st ON s.fk_statusId = st.statusId
-  `
+const getAllServices = async (req, res) => {
+  try {
+    const sql = `
+      SELECT
+        s.serviceId,
+        s.serviceDate,
+        s.fk_vehicleNo,
+        s.fk_statusId,
+        st.statusName
+      FROM service s
+      JOIN status st ON s.fk_statusId = st.statusId
+    `;
 
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error(err)
-      return res.status(500).json({ message: 'Failed to fetch services' })
-    }
+    const [results] = await db.query(sql);
 
-    res.json(results)
-  })
-}
+    res.json(results);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch services' });
+  }
+};
 
 /**
  * Get service by serviceId
  * GET /get_by_serviceid/:sid
  */
-const getServiceByServiceId = (req, res) => {
-  const serviceId = req.params.sid
+const getServiceByServiceId = async (req, res) => {
+  const serviceId = req.params.sid;
 
-  const sql = `
-    SELECT
-      s.serviceId,
-      s.serviceDate,
-      s.fk_vehicleNo,
-      s.fk_statusId,
-      st.statusName
-    FROM service s
-    JOIN status st ON s.fk_statusId = st.statusId
-    WHERE s.serviceId = ?
-  `
+  try {
+    const sql = `
+      SELECT
+        s.serviceId,
+        s.serviceDate,
+        s.fk_vehicleNo,
+        s.fk_statusId,
+        st.statusName
+      FROM service s
+      JOIN status st ON s.fk_statusId = st.statusId
+      WHERE s.serviceId = ?
+    `;
 
-  connection.query(sql, [serviceId], (err, results) => {
-    if (err) {
-      console.error(err)
-      return res.status(500).json({ message: 'Failed to fetch service' })
-    }
+    const [results] = await db.query(sql, [serviceId]);
 
     if (results.length === 0) {
-      return res.status(404).json({ message: 'Service not found' })
+      return res.status(404).json({ message: 'Service not found' });
     }
 
-    res.json(results[0])
-  })
-}
+    res.json(results[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch service' });
+  }
+};
 
 /**
  * Get services by vehicle number
  * GET /get_by_vehicle_no/:vehicleno
  */
-const getServiceByVehicleNo = (req, res) => {
-  const vehicleNo = req.params.vehicleno
+const getServiceByVehicleNo = async (req, res) => {
+  const vehicleNo = req.params.vehicleno;
 
-  const sql = `
-    SELECT
-      s.serviceId,
-      s.serviceDate,
-      s.fk_vehicleNo,
-      s.fk_statusId,
-      st.statusName
-    FROM service s
-    JOIN status st ON s.fk_statusId = st.statusId
-    WHERE s.fk_vehicleNo = ?
-  `
+  try {
+    const sql = `
+      SELECT
+        s.serviceId,
+        s.serviceDate,
+        s.fk_vehicleNo,
+        s.fk_statusId,
+        st.statusName
+      FROM service s
+      JOIN status st ON s.fk_statusId = st.statusId
+      WHERE s.fk_vehicleNo = ?
+    `;
 
-  connection.query(sql, [vehicleNo], (err, results) => {
-    if (err) {
-      console.error(err)
-      return res.status(500).json({ message: 'Failed to fetch services' })
-    }
+    const [results] = await db.query(sql, [vehicleNo]);
 
-    res.json(results)
-  })
-}
+    res.json(results);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch services' });
+  }
+};
 
 module.exports = {
   saveService,
@@ -169,4 +166,4 @@ module.exports = {
   getAllServices,
   getServiceByServiceId,
   getServiceByVehicleNo
-}
+};
